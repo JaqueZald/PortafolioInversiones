@@ -1,0 +1,287 @@
+Portafolio de Inversión 4 ACTIVOS
+```{r}
+rendimientos<-read.csv("C:/Users/JeReM/Desktop/ia/CRIPTOS.csv",header = TRUE)
+```
+CARGA DE LIBRERIAS
+```{r}
+library(dplyr)
+library(lubridate)
+library(nortest)
+```
+
+```{r}
+p1<-mean(rendimientos$BAT)
+p2<-mean(rendimientos$ETH)
+p3<-mean(rendimientos$XRP)
+p4<-mean(rendimientos$XRM)
+
+
+
+#VECTOR QUE REPRESEnTA LOS RENDIMIENTos
+activos<-(matrix(c(p1,p2,p3,p4)))*1
+
+vba<-matrix(4,4)
+ma<-matrix(1:1,4,4)
+vba<-select(rendimientos,-ï..Fecha)
+activos
+
+#ACTIVOS QUE SE CREAN DE LOS PROMEDIOS
+activos<-as.numeric(unlist(activos))
+ma<-cov(vba)
+macov<-matrix(c(ma),4,4)
+macov
+
+m1<-matrix(1:100,100,4)
+mn1<-matrix(1:100,100,4)
+mn2<-matrix(1:100,100,4)
+mn3<-matrix(1:100,100,4)
+hijos<-matrix(1:60,60,4)
+hijosn<-matrix(1:60,60,4)
+
+funcionObj1<-matrix()
+objetivo0<-matrix()
+fobjetivo<-matrix()
+objetivo<-matrix()
+vec<-matrix()
+estudioge<-matrix()
+
+for (repi in 1:1) {
+  
+  "generando los montos de inversión"
+  
+  for (j in 1:4) 
+    {
+    for (i in 1:100) 
+      {
+      m1[i,j]<-runif(1,0,1)
+      
+    }
+    
+  }
+  
+  #normalizar
+  for (i in 1:100) 
+  {
+  
+    aa<-m1[i,]
+    b<-sum(aa)
+    
+    mn1[i,]<-aa/b
+  
+  }
+  
+  timepoini<-proc.time()
+  
+  ###GENERACIONES AQUI
+  for (ciclo in 1:1000) 
+    {
+    
+  ###Obteniendo ganancia
+    for(i in 1:100)
+  
+{
+  
+  resu<-0
+  r<-0
+  for (j in 1:4) {
+    
+    r<-(activos[j]*mn1[i,j])+r
+    # r1[i]<-sum(r)
+    
+  }
+  
+  ######OBTIENDO RIESGO
+  
+  
+  for (t in 1:4){
+    
+    for (h in 1:4){
+      
+      resu<-(macov[t,h]*mn1[i,t]*mn1[i,h])+resu
+      
+    }
+    
+  }
+  
+  ########funcion objetivo lista
+  objetivo[i]<-r/resu
+  
+    }
+    
+fobjetivo<-as.numeric(unlist(objetivo))
+funcionObj1[ciclo]<-max(fobjetivo)
+
+objetivo0<-sort(fobjetivo, decreasing = TRUE) #Ordenar padres
+
+for (i in 1:100) {
+  
+  for (j in 1:100) {
+    
+    if(objetivo0[i]==fobjetivo[j])
+    {
+      mn2[i,]<-mn1[j,]
+    }
+    
+  }
+  
+}
+
+"haciendo selección de papás"
+maxru=max(objetivo0);
+minru=min(objetivo0);
+
+
+#Porcentaje de 60 al 80
+porcr=60
+
+for (k in 1:porcr) {
+  
+  rul=minru+((maxru-minru)*runif(1,0,1))
+  
+  n=100
+  
+  while (n>1) {
+    if((rul>objetivo0[n])&(rul<objetivo0[n-1])){
+      mn3[k,]<-mn2[n,]
+      n<-1
+    } else{
+      n=n-1
+    }
+    
+  }
+  
+}
+
+#Cruza por BLX-alpha
+pr<-2
+im<-1
+k<-0
+valor_alpha<-runif(1,0,1)
+#valor_alpha<-0.5
+#alpha<-0.7
+
+for (i in seq(1, 60, by = 2)) {
+  for (j in 1:4) {
+    a<-max(mn3[i,j],mn3[i+1,j])
+    b<-min(mn3[i,j],mn3[i+1,j])
+    I = a+b
+    limi=abs((b-(I*valor_alpha)))
+    limis=(a+(I*valor_alpha))
+    hijos[i,j]= runif(1,min = limi,max = limis)
+    hijos[i+1,j]=runif(1,min = limi, max = limis)
+  }
+  
+}
+
+for (i in 1:60) {
+  aa<-abs(hijos[i,])
+  b<-sum(aa)
+  
+  hijosn[i,]<-aa/b
+  
+}
+
+inde1=round(runif(1,1,59))
+
+inde2=round(runif(1,1,59))
+
+while(inde1==inde2){
+  inde2=round(runif(1,1,59))
+  
+}
+
+inde3=round(runif(1,1,59))
+
+while ((inde1==inde3) || (inde2==inde3)) {
+  inde3=round(runif(1,1,59))
+}
+
+
+
+
+for (j in 1:4) {
+  vec[j]<-hijosn[inde1,j]
+}
+ctl<-(max(vec)-min(vec))/1
+
+for (j in 1:4) {
+  hijosn[inde1,j]<-runif(1,min(hijos[,j]),max(hijos[,j]))
+  hijosn[inde2,j]<-runif(1,min(hijos[,j]),max(hijos[,j]))
+  hijosn[inde3,j]<-runif(1,min(hijos[,j]),max(hijos[,j]))
+  
+}
+
+hijosn[inde1,]<-hijosn[inde1,]/sum(hijosn[inde1,])
+hijosn[inde2,]<-hijosn[inde2,]/sum(hijosn[inde2,])
+hijosn[inde3,]<-hijosn[inde3,]/sum(hijosn[inde3,])
+
+
+"remplazo de los hijos"
+for (jj in 1:60) {
+  mn2[40+jj,]<-hijosn[jj,]
+  
+}
+
+  mn1<-mn2
+
+  }
+  estudioge[repi]<-max(funcionObj1)
+  
+}
+
+algoritmo2<-funcionObj1
+
+tiempofin<-proc.time()-timepoini
+
+resu1<-0
+for (t in 1:4) {
+  
+  for (h in 1:4) {
+    
+    resu1<-(macov[t,h]*mn1[1,h])+resu1
+    
+  }
+  
+}
+resu1<-resu1*100
+
+r1<-0
+for (j in 1:4) {
+  
+  r1<-(activos[j]*mn1[1,j])+r1
+  #r1[i<-sum(r)
+  
+}
+r1<-r1*100
+
+plot(funcionObj1,type = "l")
+
+
+
+
+
+
+```
+
+
+```{r}
+mean(rendimientos$BAT)
+mean(rendimientos$ETH)
+mean(rendimientos$XRP)
+mean(rendimientos$XRM)
+```
+
+
+```{r}
+lillie.test(funcionObj1)
+median(funcionObj1)
+
+duration = funcionObj1    # the eruption durations 
+quantile(duration)                # apply the quantile function
+IQR(duration)
+```
+```{r}
+mn1
+```
+
+MN1 MONTOS A INVERTIR
